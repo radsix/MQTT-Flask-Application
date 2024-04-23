@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQTT Conveyor Belt Control</title>
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #cbe8fc; /* Light blue background */
+            text-align: center;
+            margin: 50px;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        #container {
+            border: 2px solid rgb(207, 207, 255); /* Adding black outline */
+            padding: 20px;
+            display: inline-block; /* Prevents the container from taking full width */
+            background-color: white; /* White background */
+            border-radius: 20px; /* Curving the edges */
+        }
+
+        .indicator-container {
+            margin-top: 20px;
+        }
+
+        .indicator {
+            width: 100px;
+            height: 100px;
+            background-color: red;
+            border-radius: 50%;
+            line-height: 100px;
+            font-size: 24px;
+            color: white;
+            margin: 0 auto;
+            position: relative;
+            border: 2px solid black; /* Adding black outline */
+        }
+
+        .indicator.green {
+            background-color: rgba(0, 128, 0, 0.805);
+        }
+
+        .button-container {
+            margin-top: 20px;
+        }
+
+        .buttonGo {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 25px;
+            background-color: rgba(0, 128, 0, 0.805);
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+
+        .buttonGo:hover {
+            background-color: #004d00;
+        }
+
+        .buttonStop {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 25px;
+            background-color: red;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+
+        .buttonStop:hover {
+            background-color: rgba(255, 0, 0, 0.577);
+        }
+
+        #logo {
+            width: 300px;
+            height: 300px;
+            background-color: rgba(0, 0, 0, 0);
+            object-fit: none;
+            object-position: center 50px;
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            function updateConveyorStatus() {
+            $.get('/conveyor_status', function (data) {
+                var conveyor_status = data.conveyor_status;
+                $('.indicator').removeClass('green'); // Remove green class first
+                $('.indicator').text(conveyor_status);
+                if (conveyor_status === 'On') {
+                    $('.indicator').addClass('green');
+                }
+            });
+            }
+
+            // Call the function initially
+            updateConveyorStatus();
+
+            // Set interval to update conveyor status every 100 milliseconds
+            setInterval(updateConveyorStatus, 100);
+
+            $("#stopPublish").click(function () {
+                $.ajax({
+                    type: 'POST',
+                    url: '/publish',
+                    data: {message: 'stop'},
+                    success: function (response) {
+                        alert(response); // Show response from Flask server
+                    }
+                });
+            });
+
+            $("#goPublish").click(function () {
+                $.ajax({
+                    type: 'POST',
+                    url: '/publish',
+                    data: {message: 'go'},
+                    success: function (response) {
+                        alert(response); // Show response from Flask server
+                    }
+                });
+            });
+        });
+    </script>
+    
+</head>
+
+<body>
+    <div id="container">
+        <h2>MQTT Conveyor Belt Control</h2>
+        <br>
+        <div class="button-container">
+            <input type="button" id="goPublish" class="buttonGo" value="Start Conveyor Belt" />
+            <input type="button" id="stopPublish" class="buttonStop" value="Stop Conveyor Belt" />
+        </div>
+        <br><br>
+        <div class="indicator-container">
+            <div class="indicator {{ 'green' if conveyor_status == 'On' else '' }}">{{ conveyor_status }}</div>
+        </div>
+        <img id="logo" src="/static/cybLogo.png" alt="HTML5 Icon">
+    </div>
+</body>
+
+</html>
